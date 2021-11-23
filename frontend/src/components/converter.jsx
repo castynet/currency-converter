@@ -128,7 +128,7 @@ export default function Converter() {
           </div>
         </>
       ) : (
-        <p>Loading</p>
+        <p className="text-center p-5">Loading</p>
       )}
     </>
   );

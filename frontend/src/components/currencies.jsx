@@ -89,7 +89,7 @@ export default function Currencies() {
         </>
       ) : (
         <>
-          <p>Loading</p>
+          <p className="text-center p-5">Loading</p>
         </>
       )}
     </>
