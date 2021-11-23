@@ -3,6 +3,9 @@ const cors = require("cors");
 const unirest = require("unirest");
 var convertor = require("xml-js");
 const { json } = require("express");
+const db = require("./db");
+const { fetchCurrencies } = require("./fetchCurrencies");
+const PORT = process.env.PORT || 2000;
 
 // define our app
 const app = express();
@@ -21,46 +24,31 @@ app.use(express.json());
 app.get("/", (request, response) => {});
 
 // create a route on '/data' to feed the frontend with processed currency data
-app.get("/data", (request, response) => {
-  unirest(
-    "POST",
-    "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
-  ).end((res) => {
-    if (res.error) {
-      console.log(res.error);
-    }
-    var parsedRes = convertor.xml2json(res.body, {
-      compact: true,
-      spaces: 0,
-    });
-    parsedRes = JSON.parse(parsedRes);
-    parsedRes = parsedRes["gesmes:Envelope"].Cube.Cube;
-    // sort the array by date
-    parsedRes.sort(function (a, b) {
-      return new Date(b._attributes.time) - new Date(a._attributes.time);
-    });
+app.get("/data", async (request, response) => {
+  const currencies = await fetchCurrencies();
 
-    // clean and remove all unnecessary data
-    let currencies = [];
-    for (const currency of parsedRes[0].Cube) {
-      currencies.push(currency._attributes);
-    }
-
-    // package the data in an object for the frontend
-    const refinedData = {
-      ...parsedRes[0]._attributes,
-      ...{ currencies: currencies },
-    };
-
-    // send the data to the frontend
-    response.json(refinedData);
-  });
+  // send the data to the frontend
+  response.json(currencies);
 });
 
 // create a route for mpesa to send data on the result of the transaction
-app.post("/conversions", (request, response) => {});
+app.post("/conversions", (request, response) => {
+  const { amount, from, to, now } = request.body;
+  var sql = `INSERT INTO conversions (timestamp, amount, currencyTo, currencyFrom) VALUES (${now}, ${amount}, '${to}', '${from}')`;
+  db.query(sql, function (err, result) {
+    if (err) throw err;
+    else {
+      response.json({ success: true });
+    }
+  });
+});
 
 // sets the port & listens in for requests
-app.listen(2000, () => {
-  console.log("the server is running");
+app.listen(PORT, () => {
+  console.log(`the server is running on port ${PORT}`);
 });
+
+// keep the connection alive
+setInterval(function () {
+  db.query("SELECT 1");
+}, 5000);
