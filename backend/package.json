@@ -4,14 +4,20 @@
   "description": "Backend for the advanced app calculator",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "mocha '*.test.js'"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chai": "^4.3.4",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "mysql": "^2.18.1",
     "unirest": "^0.6.0",
     "xml-js": "^1.6.11"
+  },
+  "devDependencies": {
+    "mocha": "^9.1.3"
   }
 }
